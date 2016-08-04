@@ -25,7 +25,7 @@ var questions = [
     {
         "Where is the Blue Mosque from? ": [
             "Istanbul"
-
+            
         ]
     },
     {
@@ -182,6 +182,7 @@ function trackEvent(category, action, label, value, callbback) {
   );
 }
 
+
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
 exports.handler = function (event, context) {
@@ -272,7 +273,21 @@ function onIntent(intentRequest, session, callback) {
     } else if ("AMAZON.YesIntent" === intentName) {
         handleAnswerRequest(intent, session, callback);
     } else if ("AMAZON.NoIntent" === intentName) {
-        handleAnswerRequest(intent, session, callback);
+        handleAnswerRequest(intent, session, callback){
+            trackEvent(
+                'Intent',
+                'AMAZON.NoIntent',
+                'na',
+                '100', // Event value must be numeric.
+                function(err) {
+                    if (err) {
+                return next(err);
+                }
+                var speechOutput = "Okay.";
+        response.tell(speechOutput);
+      });
+    }   
+    
     } else if ("AMAZON.StartOverIntent" === intentName) {
         getWelcomeResponse(callback);
     } else if ("AMAZON.RepeatIntent" === intentName) {
@@ -280,7 +295,7 @@ function onIntent(intentRequest, session, callback) {
     } else if ("AMAZON.HelpIntent" === intentName) {
         if (!session.attributes) {
             getWelcomeResponse(callback);
-        } else {
+        } else { 
             handleGetHelpRequest(intent, session, callback);
         }
     } else if ("AMAZON.StopIntent" === intentName) {
@@ -291,6 +306,28 @@ function onIntent(intentRequest, session, callback) {
         throw "Invalid intent";
     }
 }
+
+/**
+ * Intent handler
+ * 
+ */
+ 
+ "AMAZON.NoIntent": function (intent, session, response) {
+    trackEvent(
+      'Intent',
+      'AMAZON.NoIntent',
+      'na',
+      '100', // Event value must be numeric.
+      function(err) {
+        if (err) {
+            return next(err);
+        }
+        var speechOutput = "Okay.";
+        response.tell(speechOutput);
+      });
+}
+
+
 
 /**
  * Called when the user ends the session.
@@ -312,7 +349,7 @@ var CARD_TITLE = "Architecture Flash Cards"; // Be sure to change this for your 
 function getWelcomeResponse(callback) {
     var sessionAttributes = {},
         speechOutput = "Let's learn about architecture. I will ask you about " + GAME_LENGTH.toString()
-            + " architecture facts, try to get as many right as you can. Just say the name of the element. Let's begin. ",
+            + " architecture facts, try to get as many right as you can. Just say the answers. Let's begin. ",
         shouldEndSession = false,
 
         gameQuestions = populateGameQuestions(),
@@ -456,7 +493,7 @@ function handleAnswerRequest(intent, session, callback) {
         // If the user provided answer isn't a number > 0 and < ANSWER_COUNT,
         // return an error message to the user. Remember to guide the user into providing correct values.
         var reprompt = session.attributes.speechOutput;
-        var speechOutput = "Your answer must be a known element " + reprompt;
+        var speechOutput = "Your answer is unclear " + reprompt;
         callback(session.attributes,
             buildSpeechletResponse(CARD_TITLE, speechOutput, reprompt, false));
     } else {
@@ -535,9 +572,9 @@ function handleGetHelpRequest(intent, session, callback) {
 
     // Do not edit the help dialogue. This has been created by the Alexa team to demonstrate best practices.
 
-    var speechOutput = "I will ask you to provide the name of a, element in the periodic table. I will provide the abbreviation, you will need to provide the name. "
-        + "For example, If the element is A R, you would say Argon. To start a new game at any time, say, start new game. "
-        + "To repeat the last element, say, repeat. "
+    var speechOutput = "I will ask you to provide the answer for arhictecture facts. I will provide the question, you will need to provide the answer. "
+        + "For example, What is the city plan that New York uses, you would say grid. To start a new game at any time, say, start new game. "
+        + "To repeat the last answer, say, repeat. "
         + "Would you like to keep playing?",
         repromptText = "To give an answer, respond with the correct element. "
         + "Would you like to keep playing?";
@@ -549,7 +586,7 @@ function handleGetHelpRequest(intent, session, callback) {
 function handleFinishSessionRequest(intent, session, callback) {
     // End the session with a "Good bye!" if the user wants to quit the game
     callback(session.attributes,
-        buildSpeechletResponseWithoutCard("Thanks for playing Chemistry Flash Cards!", "", true));
+        buildSpeechletResponseWithoutCard("Thanks for playing Arhictecture Flash Cards!", "", true));
 }
 
 function isAnswerSlotValid(intent) {
@@ -601,7 +638,4 @@ function buildSpeechletResponseWithoutCard(output, repromptText, shouldEndSessio
 function buildResponse(sessionAttributes, speechletResponse) {
     return {
         version: "1.0",
-        sessionAttributes: sessionAttributes,
-        response: speechletResponse
-    };
 }
